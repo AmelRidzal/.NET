@@ -1,0 +1,63 @@
+@model SocialMediaApp.ViewModels.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profile";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box profile-box">
+        <h2 class="text-center mb-4">My Profile</h2>
+        
+        <div class="profile-picture-section text-center mb-4">
+            @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+            {
+                <img src="@Model.ProfilePictureUrl" alt="Profile Picture" class="profile-picture" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" />
+            }
+            else
+            {
+                <img src="~/images/default-avatar.png" alt="Default Avatar" class="profile-picture" style="width: 100px; height: 100px; max-width: 100px; max-height: 100px;" />
+            }
+        </div>
+
+        <form asp-action="UpdateProfile" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" type="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label asp-for="DateOfBirth" class="form-label"></label>
+                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+            </div>
+            
+            <div class="mb-3">
+                <label for="profileImage" class="form-label">Profile Picture</label>
+                <input type="file" class="form-control" id="profileImage" name="ProfileImage" accept="image/*" />
+                <small class="form-text text-muted">Upload a new profile picture (optional)</small>
+            </div>
+            
+            <input type="submit" value="Update Profile" class="btn btn-success w-100 p-2 mt-3" />
+            
+            <div class="text-center mt-3">
+                <a asp-controller="Home" asp-action="Index" class="text-decoration-none">Back to Home</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
