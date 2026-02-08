@@ -12,20 +12,24 @@ namespace SocialMediaApp.Controllers
         private readonly UserManager<Users> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
+        // Constructor to inject UserManager and IWebHostEnvironment
         public ProfileController(UserManager<Users> userManager, IWebHostEnvironment webHostEnvironment)
         {
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
         }
 
+        // GET: /Profile
         public async Task<IActionResult> Profile()
         {
+            // Get the currently logged-in user
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
-                return RedirectToAction("Login", "Account");
+                return RedirectToAction("Login", "Account", new { message = "Please log in to view your profile." });
             }
-
+            
+            // Create a view model to pass user data to the view
             var model = new ProfileViewModel
             {
                 Name = user.FullName,
@@ -34,7 +38,6 @@ namespace SocialMediaApp.Controllers
                 ProfilePictureUrl = user.ProfileImagePath,
                 ExistingImagePath = user.ProfileImagePath
             };
-
             return View(model);
         }
 
@@ -43,10 +46,11 @@ namespace SocialMediaApp.Controllers
         {
             if (ModelState.IsValid)
             {
+                // Get the currently logged-in user
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
                 {
-                    return RedirectToAction("Login", "Account");
+                    return RedirectToAction("Login", "Account", new { message = "Please log in to update your profile." });
                 }
 
                 // Update basic info
@@ -76,24 +80,28 @@ namespace SocialMediaApp.Controllers
                     {
                         Directory.CreateDirectory(uploadsFolder);
                     }
-
+                    
+                    // Generate a unique file name to prevent overwriting
                     string uniqueFileName = Guid.NewGuid().ToString() + "_" + model.ProfileImage.FileName;
                     string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
+                    // Save the file to the server
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
                         await model.ProfileImage.CopyToAsync(fileStream);
                     }
 
+                    // Update user's profile image path
                     user.ProfileImagePath = "/images/profiles/" + uniqueFileName;
                 }
 
+                // Update the user in the database
                 var result = await _userManager.UpdateAsync(user);
 
                 if (result.Succeeded)
                 {
                     TempData["Success"] = "Profile updated successfully!";
-                    return RedirectToAction("Profile");
+                    return RedirectToAction("Profile", "Profile", new { message = "Profile updated successfully!" });
                 }
                 else
                 {
@@ -101,10 +109,11 @@ namespace SocialMediaApp.Controllers
                     {
                         ModelState.AddModelError("", error.Description);
                     }
+                    TempData["Error"] = "Something went wrong! Please try again.";
                     return View("Profile", model);
                 }
             }
-
+            TempData["Error"] = "Please fill in all required fields correctly.";
             return View("Profile", model);
         }
     }

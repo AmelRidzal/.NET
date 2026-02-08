@@ -1,1 +1,31 @@
+### Login - GET
 GET http://localhost:5237/Account/Login
+
+### Login - POST
+POST http://localhost:5237/Account/Login
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "Password12311"
+}
+
+
+### Register a new user
+POST http://localhost:5237/Account/Register
+Content-Type: application/x-www-form-urlencoded
+
+Name=New User&Email=newuser@example.com&Password=Password123!&ConfirmPassword=Password123!
+
+### Confirm email
+POST  http://localhost:5237/Account/EmailConfirmation
+Content-Type: application/x-www-form-urlencoded
+
+email=newuser@example.com&code=123115
+
+
+### Login user
+POST http://localhost:5237/Account/Login
+Content-Type: application/x-www-form-urlencoded
+
+email=newuser@example.com&password=Password123!
