@@ -18,12 +18,6 @@ public class HomeController : Controller
         return View();
     }
 
-    /*[Authorize]
-    public IActionResult Profile()
-    {
-        return View("Profile", "Profile");
-    }*/
-
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

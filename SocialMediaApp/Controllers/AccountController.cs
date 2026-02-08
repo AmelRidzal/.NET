@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using FluentEmail.Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using SocialMediaApp.Models;
@@ -9,11 +11,13 @@ namespace SocialMediaApp.Controllers
     {
         private readonly SignInManager<Users> _signInManager;
         private readonly UserManager<Users> _userManager;
+        private readonly IFluentEmail _fluentEmail;
 
-        public AccountController(SignInManager<Users> signInManager, UserManager<Users> userManager)
+        public AccountController(SignInManager<Users> signInManager, UserManager<Users> userManager, IFluentEmail fluentEmail)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _fluentEmail = fluentEmail;
         }
 
         public ActionResult Login()
@@ -30,6 +34,12 @@ namespace SocialMediaApp.Controllers
 
                 if(result.Succeeded)
                 {
+                    if(!await _userManager.IsEmailConfirmedAsync(await _userManager.FindByEmailAsync(model.Email)))
+                    {
+                        await _signInManager.SignOutAsync();
+                        ModelState.AddModelError("", "You need to confirm your email before logging in.");
+                        return View(model);
+                    }
                     return RedirectToAction("Index", "Home");
                 }
                 else
@@ -62,7 +72,14 @@ namespace SocialMediaApp.Controllers
 
                 if(result.Succeeded)
                 {
-                    return RedirectToAction("Login", "Account");
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(users);
+                    FluentEmail.Core.Models.SendResponse response = await _fluentEmail
+                        .To(users.Email)
+                        .Subject("Confirm your email")
+                        .Body($"Email confirmation code: {code}")
+                        .SendAsync();
+    
+                    return RedirectToAction("EmailConfirmation", "Account", new { email = users.Email});
                 }
                 else
                 {
@@ -74,6 +91,46 @@ namespace SocialMediaApp.Controllers
                 }
             }
             return View(model);
+        }
+
+        public ActionResult EmailConfirmation(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+            {
+                return RedirectToAction("Register", "Account");
+            }
+
+            var model = new EmailConfirmationViewModel
+            {
+                Email = email,
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EmailConfirmation(EmailConfirmationViewModel model)
+        {
+            if(string.IsNullOrEmpty(model.Email) || string.IsNullOrEmpty(model.Code))
+            {
+                //bad request
+                return RedirectToAction("Index", "Home");
+            }
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if(user == null)
+            {
+                //bad request
+                return RedirectToAction("Index", "Home");
+            }
+            var result = await _userManager.ConfirmEmailAsync(user, model.Code);
+            if(result.Succeeded)            {
+                return RedirectToAction("Login", "Account");
+            }
+            else
+            {
+                //something went wrong
+                return RedirectToAction("Index", "Home");
+            }
         }
 
         public ActionResult VerifyEmail()

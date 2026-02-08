@@ -1,0 +1,32 @@
+﻿@using SocialMediaApp.ViewModels;
+@model EmailConfirmationViewModel;
+
+@{
+    ViewData["Title"] = "Confirm Email";
+    Layout = "~/Views/Shared/_AccountLayout.cshtml";
+}
+
+<div class="account-container">
+    <div class="account-box">
+        <h2 class="text-center mb-4">Confirm Email</h2>
+        <form asp-action="EmailConfirmation" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input asp-for="Email" type="hidden" />
+                <div class="mb-3">
+                    <label asp-for="Code" class="form-label"></label>
+                    <input asp-for="Code" class="form-control" />
+                    <span asp-validation-for="Code" class="text-danger"></span>
+                </div>
+                
+                <input type="submit" value="Verify" class="btn btn-success w-100 p-2" />
+                <div class="text-center mt-2">
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none mt-3">Back</a>
+            </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
