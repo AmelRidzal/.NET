@@ -3,10 +3,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SocialMediaApp.ViewModels;
 
-public class ChangePasswordViewModel
+public class ResetPasswordViewModel
 {
-    [Required(ErrorMessage = "Email is required.")]
-    [EmailAddress(ErrorMessage = "Invalid email format.")]
     public string Email { get; set; }
 
     [Required(ErrorMessage = "Password is required.")]
@@ -20,4 +18,6 @@ public class ChangePasswordViewModel
     [DataType(DataType.Password)]
     [Display(Name = "Confirm New Password")]
     public string ConfirmNewPassword { get; set; }
+
+    public string Token { get; set; }
 }

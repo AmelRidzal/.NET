@@ -143,65 +143,91 @@ namespace SocialMediaApp.Controllers
         {
             if(ModelState.IsValid)
             {
-                var user = await _userManager.FindByNameAsync(model.Email);
+                var user = await _userManager.FindByEmailAsync(model.Email);
                 if(user != null)
                 {
-                    return RedirectToAction("ChangePassword", "Account", new{ username = user.UserName });
+                    // Generate password reset token
+                    var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    
+                    // Create the reset password link
+                    var resetLink = Url.Action(
+                        "ResetPassword", 
+                        "Account", 
+                        new { email = user.Email, token = token }, 
+                        Request.Scheme  // This ensures it's a full URL with http/https
+                    );
+                    
+                    // Send email with the link
+                    var response = await _fluentEmail
+                        .To(user.Email)
+                        .Subject("Reset Your Password")
+                        .Body($@"Click the link below to reset your password:{resetLink}")
+                        .SendAsync();
+                    
+                    // Always show success message (security best practice - don't reveal if email exists)
+                    TempData["Success"] = "If an account exists with that email, a password reset link has been sent.";
+                    return RedirectToAction("VerifyEmail");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "Something went wrong.");
-                    return View(model);
+                    // Don't reveal that the email doesn't exist (security best practice)
+                    TempData["Success"] = "If an account exists with that email, a password reset link has been sent.";
+                    return RedirectToAction("VerifyEmail");
                 }
             }
             return View(model);
         }
 
-
-        public IActionResult ChangePassword(string username)
+        // NEW: ResetPassword GET - displays the form when user clicks email link
+        public IActionResult ResetPassword(string email, string token)
         {
-            if(string.IsNullOrEmpty(username))
+            if(string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
             {
-                return RedirectToAction("VerifyEmail", "Account");
+                TempData["Error"] = "Invalid password reset link.";
+                return RedirectToAction("Login", "Account");
             }
-            return View(new ChangePasswordViewModel { Email = username });
+            
+            var model = new ResetPasswordViewModel
+            {
+                Email = email,
+                Token = token
+            };
+            
+            return View(model);
         }
 
+        // NEW: ResetPassword POST - processes the password reset
         [HttpPost]
-        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
         {
             if(ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if(user != null)
+                if(user == null)
                 {
-                    var result = await _userManager.RemovePasswordAsync(user);
-
-                    if(result.Succeeded)
-                    {
-                        result = await _userManager.AddPasswordAsync(user, model.NewPassword);
-                        return RedirectToAction("Login", "Account");
-                    }
-                    else
-                    {
-                        foreach (var error in result.Errors)
-                        {
-                            ModelState.AddModelError("", error.Description);
-                        }
-                        return View(model);
-                    }
+                    // Don't reveal that the user doesn't exist
+                    TempData["Success"] = "Password has been reset successfully.";
+                    return RedirectToAction("Login", "Account");
+                }
+                
+                var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+                
+                if(result.Succeeded)
+                {
+                    TempData["Success"] = "Password has been reset successfully. Please login with your new password.";
+                    return RedirectToAction("Login", "Account");
                 }
                 else
                 {
-                    ModelState.AddModelError("", "User not found.");
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError("", error.Description);
+                    }
                     return View(model);
                 }
             }
-            {
-                
-                ModelState.AddModelError("", "Something went wrong.");
-                return View(model);
-            }
+            
+            return View(model);
         }
 
         public async Task<IActionResult> Logout()
