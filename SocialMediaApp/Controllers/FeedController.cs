@@ -21,13 +21,16 @@ namespace SocialMediaApp.Controllers
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
                 .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new PostViewModel
+                .Select(p => new FeedPostViewModel
                 {
                     Id = p.Id,
                     Title = p.Title,
                     Content = p.Content,
+
                     UserName = p.User.FullName,
+
                     CreatedAt = p.CreatedAt,
+
                     LikesCount = p.Likes.Count,
                     CommentsCount = p.Comments.Count
                 })

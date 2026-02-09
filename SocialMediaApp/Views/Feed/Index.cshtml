@@ -4,7 +4,17 @@
     ViewData["Title"] = "Feed";
 }
 
-<h2 class="mb-4">Feed</h2>
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <h2>Feed</h2>
+
+    <a asp-controller="Posts"
+       asp-action="Create"
+       class="btn btn-primary">
+        + Create Post
+    </a>
+
+</div>
 
 <div class="feed-container">
 
@@ -14,9 +24,9 @@
     }
     else
     {
-        foreach (var post in Model.Posts)
+        foreach (var posts in Model.Posts)
         {
-            @await Html.PartialAsync("_PostItem", post)
+            @await Html.PartialAsync("_PostItem", posts)
         }
     }
 

@@ -1,8 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SocialMediaApp.Models;
 public class Posts
 {
     public int Id { get; set; }
+    [Required]
     public required string Title { get; set; }
+    [Required]
     public required string Content { get; set; }
     public required string UserId { get; set; }
     public Users User { get; set; } = null!;
