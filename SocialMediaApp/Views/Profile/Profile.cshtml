@@ -34,7 +34,7 @@
                 <input asp-for="Email" class="form-control" type="email" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
-            
+
             <div class="mb-3">
                 <label asp-for="DateOfBirth" class="form-label"></label>
                 <input asp-for="DateOfBirth" class="form-control" type="date" 
@@ -49,6 +49,10 @@
             </div>
             
             <input type="submit" value="Update Profile" class="btn btn-success w-100 p-2 mt-3" />
+
+            <div class="mt-3">
+                <a asp-controller="Profile" asp-action="ChangePassword" class="btn btn-success w-100 p-2 mt-32">Change Password</a>
+            </div>
             
             <div class="text-center mt-3">
                 <a asp-controller="Home" asp-action="Index" class="text-decoration-none">Back to Home</a>

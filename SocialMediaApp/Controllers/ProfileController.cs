@@ -11,12 +11,14 @@ namespace SocialMediaApp.Controllers
     {
         private readonly UserManager<Users> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly SignInManager<Users> _signInManager;
 
         // Constructor to inject UserManager and IWebHostEnvironment
-        public ProfileController(UserManager<Users> userManager, IWebHostEnvironment webHostEnvironment)
+        public ProfileController(UserManager<Users> userManager, IWebHostEnvironment webHostEnvironment, SignInManager<Users> signInManager)
         {
             _userManager = userManager;
             _webHostEnvironment = webHostEnvironment;
+            _signInManager = signInManager;
         }
 
         // GET: /Profile
@@ -116,5 +118,42 @@ namespace SocialMediaApp.Controllers
             TempData["Error"] = "Please fill in all required fields correctly.";
             return View("Profile", model);
         }
+    
+        [HttpGet]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+        {
+            if (!ModelState.IsValid)
+                return View(model);
+
+            var user = await _userManager.GetUserAsync(User);
+
+            var result = await _userManager.ChangePasswordAsync(
+                user,
+                model.OldPassword,
+                model.NewPassword
+            );
+
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return View(model);
+            }
+            TempData["Success"] = "Password changed successfully. Please log in again.";
+
+            await _signInManager.SignOutAsync();
+
+            return RedirectToAction("Login", "Account");
+
+        }
+    
     }
 }
