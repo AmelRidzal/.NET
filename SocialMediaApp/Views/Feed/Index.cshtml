@@ -1,0 +1,23 @@
+@model SocialMediaApp.Models.ViewModels.FeedViewModel
+
+@{
+    ViewData["Title"] = "Feed";
+}
+
+<h2 class="mb-4">Feed</h2>
+
+<div class="feed-container">
+
+    @if (!Model.Posts.Any())
+    {
+        <p class="text-muted">No posts yet.</p>
+    }
+    else
+    {
+        foreach (var post in Model.Posts)
+        {
+            @await Html.PartialAsync("_PostItem", post)
+        }
+    }
+
+</div>
