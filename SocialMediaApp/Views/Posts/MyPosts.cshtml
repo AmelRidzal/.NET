@@ -1,0 +1,46 @@
+@model SocialMediaApp.Models.ViewModels.FeedViewModel
+
+@{
+    ViewData["Title"] = "My Posts";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>My Posts</h2>
+
+    <div>
+        <a asp-controller="Feed"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            ← Back to Feed
+        </a>
+        
+        <a asp-controller="Posts"
+           asp-action="Create"
+           class="btn btn-primary">
+            + Create Post
+        </a>
+    </div>
+</div>
+
+<div class="feed-container">
+    @if (!Model.Posts.Any())
+    {
+        <div class="text-center py-5">
+            <p class="text-muted mb-3">You haven't created any posts yet.</p>
+            <a asp-controller="Posts"
+               asp-action="Create"
+               class="btn btn-primary">
+                Create Your First Post
+            </a>
+        </div>
+    }
+    else
+    {
+        <p class="text-muted mb-3">You have @Model.Posts.Count post@(Model.Posts.Count == 1 ? "" : "s")</p>
+        
+        foreach (var post in Model.Posts)
+        {
+            @await Html.PartialAsync("_PostItem", post)
+        }
+    }
+</div>

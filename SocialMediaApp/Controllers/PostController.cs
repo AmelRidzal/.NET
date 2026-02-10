@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -55,7 +56,7 @@ namespace SocialMediaApp.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> ToggleLike(int postId)
+        public async Task<IActionResult> ToggleLike(int postId, string returnUrl)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
@@ -65,9 +66,11 @@ namespace SocialMediaApp.Controllers
                 .Where(l => l.PostId == postId && l.UserId == user.Id)
                 .FirstOrDefaultAsync();
 
+            bool isLiked;
             if (like != null)
             {
                 _context.PostLikes.Remove(like);
+                isLiked = false;
             }
             else
             {
@@ -77,35 +80,126 @@ namespace SocialMediaApp.Controllers
                     UserId = user.Id,
                     LikedAt = DateTime.UtcNow
                 });
+                isLiked = true;
             }
 
             await _context.SaveChangesAsync();
+
+            // Get the updated like count
+            var likesCount = await _context.PostLikes.CountAsync(l => l.PostId == postId);
+
+            // Check if this is an AJAX request
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new { success = true, isLiked, likesCount });
+            }
+
+            // Redirect back to where the user came from (fallback for non-AJAX)
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
 
             return RedirectToAction("Index", "Feed");
         }
 
         [HttpPost]
         [Authorize]
-        public async Task<IActionResult> AddComment(int postId, string content)
+        public async Task<IActionResult> AddComment(int postId, string content, string returnUrl)
         {
             if (string.IsNullOrWhiteSpace(content))
+            {
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "Comment is required." });
+                }
                 return BadRequest("Comment is required.");
+            }
 
             var user = await _userManager.GetUserAsync(User);
 
-            _context.PostComments.Add(new PostComments
+            var comment = new PostComments
             {
                 PostId = postId,
                 UserId = user.Id,
                 Content = content,
                 CreatedAt = DateTime.UtcNow
-            });
+            };
 
+            _context.PostComments.Add(comment);
             await _context.SaveChangesAsync();
+
+            // Get the updated comment count
+            var commentsCount = await _context.PostComments.CountAsync(c => c.PostId == postId);
+
+            // Check if this is an AJAX request
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return Json(new
+                {
+                    success = true,
+                    comment = new
+                    {
+                        id = comment.Id,
+                        content = comment.Content,
+                        userName = user.FullName,
+                        createdAt = comment.CreatedAt.ToLocalTime().ToString("g")
+                    },
+                    commentsCount
+                });
+            }
+
+            // Redirect back to where the user came from (fallback for non-AJAX)
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
 
             return RedirectToAction("Index", "Feed");
         }
 
 
+        public async Task<IActionResult> MyPosts()
+        {
+            // Get the current user's ID
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var posts = await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.Likes)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
+                .Where(p => p.UserId == currentUserId) // Filter by current user
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new FeedPostViewModel
+                {
+                    Id = p.Id,
+                    Title = p.Title,
+                    Content = p.Content,
+                    UserName = p.User.FullName,
+                    CreatedAt = p.CreatedAt,
+                    LikesCount = p.Likes.Count,
+                    CommentsCount = p.Comments.Count,
+                    IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == currentUserId),
+                    Comments = p.Comments
+                        .OrderBy(c => c.CreatedAt)
+                        .Select(c => new CommentViewModel
+                        {
+                            Id = c.Id,
+                            Content = c.Content,
+                            UserName = c.User.FullName,
+                            CreatedAt = c.CreatedAt
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            var model = new FeedViewModel
+            {
+                Posts = posts
+            };
+
+            return View(model);
+        }
     }
 }

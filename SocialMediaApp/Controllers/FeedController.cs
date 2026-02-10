@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SocialMediaApp.Data;
 using SocialMediaApp.Models.ViewModels;
+using System.Security.Claims;
 
 namespace SocialMediaApp.Controllers
 {
@@ -16,11 +17,13 @@ namespace SocialMediaApp.Controllers
 
         public async Task<IActionResult> Index()
         {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             var posts = await _context.Posts
                 .Include(p => p.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
-                    .ThenInclude(c => c.User) // Add this to include comment users
+                    .ThenInclude(c => c.User)
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new FeedPostViewModel
                 {
@@ -32,7 +35,9 @@ namespace SocialMediaApp.Controllers
                     LikesCount = p.Likes.Count,
                     CommentsCount = p.Comments.Count,
                     
-                    // Add this to map comments
+                    // Add this line to check if current user liked the post
+                    IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == currentUserId),
+                    
                     Comments = p.Comments
                         .OrderBy(c => c.CreatedAt)
                         .Select(c => new CommentViewModel
