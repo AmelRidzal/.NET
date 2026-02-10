@@ -20,19 +20,29 @@ namespace SocialMediaApp.Controllers
                 .Include(p => p.User)
                 .Include(p => p.Likes)
                 .Include(p => p.Comments)
+                    .ThenInclude(c => c.User) // Add this to include comment users
                 .OrderByDescending(p => p.CreatedAt)
                 .Select(p => new FeedPostViewModel
                 {
                     Id = p.Id,
                     Title = p.Title,
                     Content = p.Content,
-
                     UserName = p.User.FullName,
-
                     CreatedAt = p.CreatedAt,
-
                     LikesCount = p.Likes.Count,
-                    CommentsCount = p.Comments.Count
+                    CommentsCount = p.Comments.Count,
+                    
+                    // Add this to map comments
+                    Comments = p.Comments
+                        .OrderBy(c => c.CreatedAt)
+                        .Select(c => new CommentViewModel
+                        {
+                            Id = c.Id,
+                            Content = c.Content,
+                            UserName = c.User.FullName,
+                            CreatedAt = c.CreatedAt
+                        })
+                        .ToList()
                 })
                 .ToListAsync();
 

@@ -20,5 +20,7 @@ namespace SocialMediaApp.Models.ViewModels
 
         public bool IsLikedByCurrentUser { get; set; }
 
+        public List<CommentViewModel> Comments { get; set; } = new List<CommentViewModel>();
+
     }
 }

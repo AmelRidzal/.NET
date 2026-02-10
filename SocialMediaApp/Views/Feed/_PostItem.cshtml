@@ -3,7 +3,6 @@
 <div class="post-card mb-4 p-3 border rounded bg-white">
 
     <div class="d-flex justify-content-between">
-
         <div>
             <strong>@Model.Title</strong>
             <div class="text-muted small">
@@ -14,7 +13,6 @@
         <small class="text-muted">
             @Model.CreatedAt.ToLocalTime().ToString("g")
         </small>
-
     </div>
 
     <div class="mt-3">
@@ -48,8 +46,24 @@
     </div>
 
     <div class="collapse mt-2" id="comments-@Model.Id">
-        <div class="comments-list">
-            @* You can optionally render last few comments here *@
+        <div class="comments-list mb-3">
+            @if (Model.Comments.Any())
+            {
+                foreach (var comment in Model.Comments)
+                {
+                    <div class="comment border-bottom py-2">
+                        <span class="fw-bold">@comment.UserName</span>
+                        <small class="text-muted ms-2">
+                            @comment.CreatedAt.ToLocalTime().ToString("g")
+                        </small>
+                        <div>@comment.Content</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted small">No comments yet. Be the first to comment!</p>
+            }
         </div>
 
         <form asp-controller="Posts"
@@ -64,6 +78,5 @@
             </div>
         </form>
     </div>
-
 
 </div>
