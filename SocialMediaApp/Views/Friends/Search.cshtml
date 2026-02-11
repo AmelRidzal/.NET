@@ -1,0 +1,122 @@
+@model List<SocialMediaApp.ViewModels.UserSearchViewModel>
+@{
+    ViewData["Title"] = "Search Friends";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>
+                <i class="fas fa-search"></i> Search Friends
+            </h2>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <form asp-action="Search" method="get" class="row g-3">
+                        <div class="col-md-10">
+                            <input type="text" name="searchQuery" class="form-control" placeholder="Search for friends by name or email..." value="@Context.Request.Query["searchQuery"]" />
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <a asp-action="Index" class="btn btn-secondary mb-3">
+                <i class="fas fa-arrow-left"></i> Back to Friends
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            <div class="col-md-12 mb-3">
+                <h5>Search Results (@Model.Count found)</h5>
+            </div>
+            @foreach (var user in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="@(user.ProfilePictureUrl ?? "/images/default-avatar.png")" 
+                                     alt="@user.UserName" 
+                                     class="rounded-circle me-3" 
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">@user.UserName</h5>
+                                    <p class="card-text small text-muted mb-1">@user.Email</p>
+                                    @if (user.MutualFriendsCount > 0)
+                                    {
+                                        <p class="card-text small text-muted">
+                                            <i class="fas fa-users"></i> @user.MutualFriendsCount mutual friends
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                            <div>
+                                @if (user.IsFriend)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i> Friends
+                                    </span>
+                                }
+                                else if (user.HasPendingRequest)
+                                {
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> Request Pending
+                                    </span>
+                                }
+                                else if (user.HasSentRequest)
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-paper-plane"></i> Request Sent
+                                    </span>
+                                }
+                                else
+                                {
+                                    <form asp-action="SendRequest" method="post">
+                                        <input type="hidden" name="friendUserId" value="@user.UserId" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-user-plus"></i> Add Friend
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else if (!string.IsNullOrEmpty(Context.Request.Query["searchQuery"]))
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No users found matching your search query.
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Enter a name or email to search for friends.
+                </div>
+            </div>
+        }
+    </div>
+</div>

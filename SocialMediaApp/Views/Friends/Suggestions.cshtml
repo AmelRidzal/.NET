@@ -1,0 +1,87 @@
+@model SocialMediaApp.ViewModels.FriendSuggestionsViewModel
+@{
+    ViewData["Title"] = "Friend Suggestions";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>
+                <i class="fas fa-lightbulb"></i> Friend Suggestions
+            </h2>
+            <p class="text-muted">People you may know based on mutual friends</p>
+            <hr />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Friends
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        @if (Model.SuggestedFriends.Any())
+        {
+            @foreach (var user in Model.SuggestedFriends)
+            {
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="@(user.ProfilePictureUrl ?? "/images/default-avatar.png")" 
+                                     alt="@user.UserName" 
+                                     class="rounded-circle me-3" 
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">@user.UserName</h5>
+                                    <p class="card-text small text-muted mb-1">@user.Email</p>
+                                    @if (user.MutualFriendsCount > 0)
+                                    {
+                                        <p class="card-text small text-primary">
+                                            <i class="fas fa-users"></i> @user.MutualFriendsCount mutual friends
+                                        </p>
+                                    }
+                                </div>
+                            </div>
+                            <div>
+                                @if (user.HasSentRequest)
+                                {
+                                    <span class="badge bg-info">
+                                        <i class="fas fa-paper-plane"></i> Request Sent
+                                    </span>
+                                }
+                                else if (user.HasPendingRequest)
+                                {
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> Request Pending
+                                    </span>
+                                }
+                                else
+                                {
+                                    <form asp-action="SendRequest" method="post">
+                                        <input type="hidden" name="friendUserId" value="@user.UserId" />
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                                            <i class="fas fa-user-plus"></i> Add Friend
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> No friend suggestions available at the moment. Add some friends to get personalized suggestions!
+                </div>
+            </div>
+        }
+    </div>
+</div>
