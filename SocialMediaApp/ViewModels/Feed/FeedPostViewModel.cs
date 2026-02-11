@@ -22,5 +22,8 @@ namespace SocialMediaApp.Models.ViewModels
 
         public List<CommentViewModel> Comments { get; set; } = new List<CommentViewModel>();
 
+        public bool CanDelete { get; set; }
+
+
     }
 }

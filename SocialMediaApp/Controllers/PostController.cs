@@ -180,6 +180,7 @@ namespace SocialMediaApp.Controllers
                     CreatedAt = p.CreatedAt,
                     LikesCount = p.Likes.Count,
                     CommentsCount = p.Comments.Count,
+                    CanDelete = true,
                     IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == currentUserId),
                     Comments = p.Comments
                         .OrderBy(c => c.CreatedAt)
@@ -201,5 +202,26 @@ namespace SocialMediaApp.Controllers
 
             return View(model);
         }
+
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var post = await _context.Posts
+                .FirstOrDefaultAsync(p => p.Id == id && p.UserId == currentUserId);
+
+            if (post == null)
+                return NotFound();
+
+            _context.Posts.Remove(post);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(MyPosts));
+        }
+
     }
 }

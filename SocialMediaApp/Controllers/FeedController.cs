@@ -34,7 +34,8 @@ namespace SocialMediaApp.Controllers
                     CreatedAt = p.CreatedAt,
                     LikesCount = p.Likes.Count,
                     CommentsCount = p.Comments.Count,
-                    
+                    CanDelete = false,
+
                     // Add this line to check if current user liked the post
                     IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == currentUserId),
                     
