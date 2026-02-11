@@ -15,6 +15,7 @@ public class AppDbContext : IdentityDbContext<Users>
     public DbSet<PostLikes> PostLikes { get; set; }
     public DbSet<PostComments> PostComments { get; set; }
     public DbSet<Friends> Friends { get; set; }
+    public DbSet<Message> Messages { get; set; } // NEW: Added Messages
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -25,7 +26,7 @@ public class AppDbContext : IdentityDbContext<Users>
             .HasIndex(pl => new { pl.UserId, pl.PostId })
             .IsUnique();
 
-        // Configure relationships
+        // Configure Posts relationships
         builder.Entity<Posts>()
             .HasOne(p => p.User)
             .WithMany(u => u.Posts)
@@ -56,8 +57,7 @@ public class AppDbContext : IdentityDbContext<Users>
             .HasForeignKey(pc => pc.PostId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ADD FRIENDS CONFIGURATION
-        // This prevents cascade delete conflicts since both FKs point to Users table
+        // Configure Friends relationships
         builder.Entity<Friends>()
             .HasOne(f => f.User)
             .WithMany()
@@ -70,9 +70,26 @@ public class AppDbContext : IdentityDbContext<Users>
             .HasForeignKey(f => f.FriendUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Optional: Prevent duplicate friend requests
+        // Prevent duplicate friend requests
         builder.Entity<Friends>()
             .HasIndex(f => new { f.UserId, f.FriendUserId })
             .IsUnique();
+
+        // NEW: Configure Messages relationships
+        builder.Entity<Message>()
+            .HasOne(m => m.Sender)
+            .WithMany()
+            .HasForeignKey(m => m.SenderId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<Message>()
+            .HasOne(m => m.Receiver)
+            .WithMany()
+            .HasForeignKey(m => m.ReceiverId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Index for faster message queries
+        builder.Entity<Message>()
+            .HasIndex(m => new { m.SenderId, m.ReceiverId, m.SentAt });
     }
 }

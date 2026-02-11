@@ -1,0 +1,115 @@
+@model SocialMediaApp.ViewModels.InboxViewModel
+@{
+    ViewData["Title"] = "Messages";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="bi bi-chat-dots"></i> Messages
+                    @if (Model.TotalUnreadCount > 0)
+                    {
+                        <span class="badge bg-danger">@Model.TotalUnreadCount</span>
+                    }
+                </h2>
+                <a href="@Url.Action("Index", "Friends")" class="btn btn-outline-primary">
+                    <i class="bi bi-people"></i> View Friends
+                </a>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (!Model.Conversations.Any())
+            {
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                        <h4 class="mt-3 text-muted">No Messages Yet</h4>
+                        <p class="text-muted">Start a conversation with your friends!</p>
+                        <a href="@Url.Action("Index", "Friends")" class="btn btn-primary mt-3">
+                            <i class="bi bi-people"></i> Go to Friends
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="list-group">
+                    @foreach (var conversation in Model.Conversations)
+                    {
+                        <a href="@Url.Action("Chat", "Messages", new { friendId = conversation.FriendId })" 
+                           class="list-group-item list-group-item-action @(conversation.UnreadCount > 0 ? "list-group-item-light border-primary" : "")">
+                            <div class="d-flex align-items-center">
+                                <img src="@conversation.FriendProfilePicture" 
+                                     alt="@conversation.FriendName" 
+                                     class="rounded-circle me-3" 
+                                     style="width: 60px; height: 60px; object-fit: cover;">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="mb-1 @(conversation.UnreadCount > 0 ? "fw-bold" : "")">
+                                            @conversation.FriendName
+                                        </h5>
+                                        <small class="text-muted">
+                                            @{
+                                                var timeDiff = DateTime.UtcNow - conversation.LastMessageTime;
+                                                if (timeDiff.TotalMinutes < 1)
+                                                {
+                                                    <text>Just now</text>
+                                                }
+                                                else if (timeDiff.TotalMinutes < 60)
+                                                {
+                                                    <text>@((int)timeDiff.TotalMinutes)m ago</text>
+                                                }
+                                                else if (timeDiff.TotalHours < 24)
+                                                {
+                                                    <text>@((int)timeDiff.TotalHours)h ago</text>
+                                                }
+                                                else if (timeDiff.TotalDays < 7)
+                                                {
+                                                    <text>@((int)timeDiff.TotalDays)d ago</text>
+                                                }
+                                                else
+                                                {
+                                                    @conversation.LastMessageTime.ToString("MMM dd")
+                                                }
+                                            }
+                                        </small>
+                                    </div>
+                                    <p class="mb-1 text-muted @(conversation.UnreadCount > 0 ? "fw-semibold" : "")">
+                                        @if (conversation.IsLastMessageFromCurrentUser)
+                                        {
+                                            <span>You: </span>
+                                        }
+                                        @conversation.LastMessage
+                                    </p>
+                                    @if (conversation.UnreadCount > 0)
+                                    {
+                                        <span class="badge bg-primary rounded-pill">
+                                            @conversation.UnreadCount new
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

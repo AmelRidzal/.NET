@@ -41,7 +41,7 @@ namespace SocialMediaApp.Controllers
             {
                 FriendId = f.FriendId,
                 UserId = f.UserId == currentUserId ? f.FriendUserId : f.UserId,
-                UserName = f.UserId == currentUserId ? f.FriendUser.UserName : f.User.UserName,
+                UserName = f.UserId == currentUserId ? f.FriendUser.FullName : f.User.FullName, // FIXED: Changed from .UserName to .FullName
                 Email = f.UserId == currentUserId ? f.FriendUser.Email : f.User.Email,
                 ProfilePictureUrl = f.UserId == currentUserId ? f.FriendUser.ProfileImagePath : f.User.ProfileImagePath,
                 Status = f.Status,
@@ -59,7 +59,7 @@ namespace SocialMediaApp.Controllers
             {
                 FriendId = f.FriendId,
                 UserId = f.UserId,
-                UserName = f.User.UserName,
+                UserName = f.User.FullName, // FIXED: Changed from .UserName to .FullName
                 Email = f.User.Email,
                 ProfilePictureUrl = f.User.ProfileImagePath,
                 Status = f.Status,
@@ -77,7 +77,7 @@ namespace SocialMediaApp.Controllers
             {
                 FriendId = f.FriendId,
                 UserId = f.FriendUserId,
-                UserName = f.FriendUser.UserName,
+                UserName = f.FriendUser.FullName, // FIXED: Changed from .UserName to .FullName
                 Email = f.FriendUser.Email,
                 ProfilePictureUrl = f.FriendUser.ProfileImagePath,
                 Status = f.Status,
@@ -103,14 +103,14 @@ namespace SocialMediaApp.Controllers
 
             var users = await _userManager.Users
                 .Where(u => u.Id != currentUserId && 
-                           (u.UserName.Contains(searchQuery) || u.Email.Contains(searchQuery)))
+                           (u.FullName.Contains(searchQuery) || u.Email.Contains(searchQuery))) // FIXED: Changed from u.UserName to u.FullName for search
                 .Take(20)
                 .ToListAsync();
 
             var searchResults = users.Select(u => new UserSearchViewModel
             {
                 UserId = u.Id,
-                UserName = u.UserName,
+                UserName = u.FullName, // FIXED: Changed from .UserName to .FullName
                 Email = u.Email,
                 ProfilePictureUrl = u.ProfileImagePath,
                 IsFriend = IsFriend(currentUserId, u.Id),
@@ -283,7 +283,7 @@ namespace SocialMediaApp.Controllers
             viewModel.SuggestedFriends = suggestedUsers.Select(u => new UserSearchViewModel
             {
                 UserId = u.Id,
-                UserName = u.UserName,
+                UserName = u.FullName, // FIXED: Changed from .UserName to .FullName
                 Email = u.Email,
                 ProfilePictureUrl = u.ProfileImagePath,
                 IsFriend = false,
@@ -337,4 +337,4 @@ namespace SocialMediaApp.Controllers
             return userFriends.Intersect(friendFriends).Count();
         }
     }
-}
+} 

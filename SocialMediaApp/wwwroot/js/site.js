@@ -140,4 +140,23 @@
             });
         }
     });
+
+     function updateUnreadCount() {
+        fetch('@Url.Action("GetUnreadCount", "Messages")')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('unreadBadge');
+                if (data.count > 0) {
+                    badge.textContent = data.count;
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+            });
+    }
+
+    // Check every 30 seconds
+    setInterval(updateUnreadCount, 30000);
+    // Check immediately on load
+    updateUnreadCount();
 });
